@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Google Sans', Arial, sans-serif; padding: 16px; background: #f8f9fa; font-size: 14px; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px; border-radius: 8px 8px 0 0; margin: -16px -16px 16px -16px; }
+    h2 { font-size: 18px; margin: 0; }
+    .subtitle { font-size: 12px; opacity: 0.9; margin-top: 4px; }
+    .section { background: white; border-radius: 8px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .section-title { font-size: 13px; font-weight: 600; color: #5f6368; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .form-group { margin-bottom: 12px; }
+    label { display: block; font-size: 12px; font-weight: 500; color: #5f6368; margin-bottom: 6px; }
+    input, textarea { width: 100%; padding: 8px 12px; border: 1px solid #dadce0; border-radius: 4px; font-size: 13px; font-family: inherit; }
+    input:focus, textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1); }
+    textarea { resize: vertical; min-height: 60px; }
+    .annotation-types { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px; }
+    .type-btn { padding: 10px; border: 2px solid #dadce0; background: white; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .type-btn:hover { border-color: #667eea; background: #f8f9fa; }
+    .type-btn.selected { border-color: #667eea; background: #e8f0fe; color: #667eea; font-weight: 600; }
+    .type-icon { font-size: 20px; }
+    .type-label { font-size: 11px; }
+    .btn { width: 100%; padding: 10px 16px; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn-primary { background: #667eea; color: white; }
+    .btn-primary:hover { background: #5568d3; transform: translateY(-1px); box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3); }
+    .btn-secondary { background: #e8f0fe; color: #667eea; margin-bottom: 8px; }
+    .btn-secondary:hover { background: #d2e3fc; }
+    .captured-list { max-height: 200px; overflow-y: auto; }
+    .captured-item { padding: 8px; background: #f8f9fa; border-radius: 4px; margin-bottom: 6px; font-size: 12px; display: flex; align-items: center; justify-content: space-between; }
+    .captured-text { flex: 1; font-family: monospace; }
+    .delete-btn { background: none; border: none; color: #ea4335; cursor: pointer; padding: 4px 8px; border-radius: 4px; font-size: 16px; }
+    .delete-btn:hover { background: #fce8e6; }
+    .empty-state { text-align: center; color: #80868b; font-size: 12px; padding: 20px; }
+    .help-text { font-size: 11px; color: #80868b; margin-top: 4px; font-style: italic; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2>🖊️ Quick Annotate</h2>
+    <div class="subtitle">Add annotations manually</div>
+  </div>
+  
+  <div class="section">
+    <div class="section-title">✏️ Add Annotation</div>
+    
+    <div class="form-group">
+      <label>Text to annotate:</label>
+      <input type="text" id="annotationText" placeholder="e.g., Velocity" autocomplete="off">
+      <div class="help-text">Type the exact word or phrase</div>
+    </div>
+    
+    <div class="form-group">
+      <label>Annotation type:</label>
+      <div class="annotation-types">
+        <button class="type-btn selected" data-type="circle" onclick="selectType('circle')">
+          <span class="type-icon">⭕</span>
+          <span class="type-label">Circle</span>
+        </button>
+        <button class="type-btn" data-type="cross" onclick="selectType('cross')">
+          <span class="type-icon">❌</span>
+          <span class="type-label">Cross</span>
+        </button>
+        <button class="type-btn" data-type="underline" onclick="selectType('underline')">
+          <span class="type-icon">📏</span>
+          <span class="type-label">Underline</span>
+        </button>
+        <button class="type-btn" data-type="box" onclick="selectType('box')">
+          <span class="type-icon">📦</span>
+          <span class="type-label">Box</span>
+        </button>
+      </div>
+    </div>
+    
+    <button class="btn btn-primary" onclick="addAnnotation()">📌 Add Annotation</button>
+  </div>
+  
+  <div class="section">
+    <div class="section-title">✍️ Add Handwriting Note</div>
+    
+    <div class="form-group">
+      <label>Note text (supports LaTeX):</label>
+      <textarea id="handwritingText" placeholder="e.g., Important! or $E=mc^2$"></textarea>
+      <div class="help-text">Math: use $...$ for inline, $$...$$ for display</div>
+    </div>
+    
+    <button class="btn btn-secondary" onclick="addHandwriting()">➕ Add Note</button>
+  </div>
+  
+  <div class="section">
+    <div class="section-title">📋 Current Slide Annotations</div>
+    <div id="capturedList" class="captured-list">
+      <div class="empty-state">No annotations yet</div>
+    </div>
+  </div>
+  
+  <script>
+    let selectedType = 'circle';
+    
+    window.onload = function() {
+      loadCurrentSlideAnnotations();
+    };
+    
+    function selectType(type) {
+      selectedType = type;
+      document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('selected'));
+      document.querySelector('[data-type="' + type + '"]').classList.add('selected');
+    }
+    
+    function addAnnotation() {
+      const text = document.getElementById('annotationText').value.trim();
+      if (!text) { alert('⚠️ Please enter text to annotate'); return; }
+      
+      const btn = event.target;
+      btn.disabled = true;
+      btn.textContent = '⏳ Adding...';
+      
+      google.script.run
+        .withSuccessHandler(function() {
+          alert('✅ Annotation added!');
+          document.getElementById('annotationText').value = '';
+          loadCurrentSlideAnnotations();
+          btn.disabled = false;
+          btn.innerHTML = '📌 Add Annotation';
+        })
+        .withFailureHandler(function(error) {
+          alert('❌ Error: ' + error.message);
+          btn.disabled = false;
+          btn.innerHTML = '📌 Add Annotation';
+        })
+        .addManualAnnotation(text, selectedType);
+    }
+    
+    function addHandwriting() {
+      const text = document.getElementById('handwritingText').value.trim();
+      if (!text) { alert('⚠️ Please enter note text'); return; }
+      
+      google.script.run
+        .withSuccessHandler(function() {
+          alert('✅ Handwriting note added!');
+          document.getElementById('handwritingText').value = '';
+          loadCurrentSlideAnnotations();
+        })
+        .withFailureHandler(function(error) {
+          alert('❌ Error: ' + error.message);
+        })
+        .addManualHandwriting(text);
+    }
+    
+    function loadCurrentSlideAnnotations() {
+      google.script.run
+        .withSuccessHandler(renderAnnotationsList)
+        .getCurrentSlideAnnotations();
+    }
+    
+    function renderAnnotationsList(data) {
+      const listEl = document.getElementById('capturedList');
+      
+      if (!data.annotations || data.annotations.length === 0) {
+        listEl.innerHTML = '<div class="empty-state">No annotations yet</div>';
+        return;
+      }
+      
+      let html = '';
+      
+      data.annotations.forEach(function(ann) {
+        const icon = {'circle':'⭕','cross':'❌','underline':'📏','box':'📦'}[ann.type] || '🔵';
+        html += '<div class="captured-item"><span class="captured-text">' + icon + ' [' + ann.id + ']: ' + ann.text + '</span>' +
+                '<button class="delete-btn" onclick="deleteAnnotation(\'' + ann.id + '\',\'' + ann.type + '\',\'' + ann.text.replace(/'/g, "\\'") + '\')">🗑️</button></div>';
+      });
+      
+      if (data.handwriting && data.handwriting.length > 0) {
+        data.handwriting.forEach(function(hw) {
+          html += '<div class="captured-item"><span class="captured-text">✍️ [' + hw.id + ']: ' + hw.text + '</span>' +
+                  '<button class="delete-btn" onclick="deleteHandwritingNote(\'' + hw.id + '\')">🗑️</button></div>';
+        });
+      }
+      
+      listEl.innerHTML = html;
+    }
+    
+    function deleteAnnotation(id, type, text) {
+      if (!confirm('Delete this annotation?')) return;
+      google.script.run.withSuccessHandler(loadCurrentSlideAnnotations).deleteAnnotation(id, type, text);
+    }
+    
+    function deleteHandwritingNote(id) {
+      if (!confirm('Delete this note?')) return;
+      google.script.run.withSuccessHandler(loadCurrentSlideAnnotations).deleteHandwritingNote(id);
+    }
+  </script>
+</body>
+</html>
