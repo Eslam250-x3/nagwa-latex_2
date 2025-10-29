@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Google Sans', Arial, sans-serif; padding: 20px; background: #f8f9fa; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; margin: -20px -20px 20px -20px; }
+    h2 { font-size: 20px; margin: 0; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #5f6368; margin-bottom: 6px; }
+    input, select { width: 100%; padding: 10px; border: 1px solid #dadce0; border-radius: 6px; font-size: 14px; font-family: inherit; }
+    input:focus, select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1); }
+    .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; margin-top: 8px; transition: all 0.2s; }
+    .btn-primary { background: #667eea; color: white; }
+    .btn-primary:hover { background: #5568d3; transform: translateY(-1px); }
+    .btn-secondary { background: #e8f0fe; color: #667eea; }
+    .success { color: #34a853; font-size: 13px; margin-top: 12px; display: none; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2>🔧 Session Configuration</h2>
+    <div style="opacity:0.9;margin-top:4px;font-size:13px">Configure Nagwa LaTeX metadata</div>
+  </div>
+  
+  <div class="form-group">
+    <label>Session ID:</label>
+    <input type="text" id="sessionID" placeholder="164186435052">
+  </div>
+  
+  <div class="form-group">
+    <label>Country:</label>
+    <select id="country">
+      <option value="eg">Egypt (eg)</option>
+      <option value="sa">Saudi Arabia (sa)</option>
+      <option value="ae">UAE (ae)</option>
+      <option value="us">USA (us)</option>
+      <option value="gb">UK (gb)</option>
+    </select>
+  </div>
+  
+  <div class="form-group">
+    <label>Subject:</label>
+    <select id="subject">
+      <option value="Physics">Physics</option>
+      <option value="Mathematics">Mathematics</option>
+      <option value="Chemistry">Chemistry</option>
+      <option value="Biology">Biology</option>
+      <option value="Science">Science</option>
+    </select>
+  </div>
+  
+  <div class="form-group">
+    <label>Language:</label>
+    <select id="language">
+      <option value="en">English</option>
+      <option value="ar">Arabic</option>
+    </select>
+  </div>
+  
+  <div class="form-group">
+    <label>Grade:</label>
+    <input type="number" id="grade" value="12" min="1" max="12">
+  </div>
+  
+  <div class="form-group">
+    <label>Term:</label>
+    <input type="number" id="term" value="0" min="0" max="3">
+  </div>
+  
+  <div class="form-group">
+    <label>Session Title:</label>
+    <input type="text" id="sessionTitle" placeholder="e.g., Revision on Physics">
+  </div>
+  
+  <div class="form-group">
+    <label>Document Class:</label>
+    <select id="documentClass">
+      <option value="Worksheet">Worksheet</option>
+      <option value="Lesson">Lesson</option>
+      <option value="Assessment">Assessment</option>
+    </select>
+  </div>
+  
+  <div class="form-group">
+    <label>Numerals:</label>
+    <select id="numerals">
+      <option value="european">European</option>
+      <option value="arabic">Arabic</option>
+    </select>
+  </div>
+  
+  <div class="form-group">
+    <label>Text Direction:</label>
+    <select id="directions">
+      <option value="ltr">Left-to-Right (LTR)</option>
+      <option value="rtl">Right-to-Left (RTL)</option>
+    </select>
+  </div>
+  
+  <div class="success" id="successMsg">✅ Configuration saved successfully!</div>
+  
+  <button class="btn btn-primary" onclick="saveConfig()">💾 Save Configuration</button>
+  <button class="btn btn-secondary" onclick="google.script.host.close()">Cancel</button>
+  
+  <script>
+    google.script.run.withSuccessHandler(loadConfig).getSessionConfig();
+    
+    function loadConfig(config) {
+      document.getElementById('sessionID').value = config.sessionID;
+      document.getElementById('country').value = config.country;
+      document.getElementById('subject').value = config.subject;
+      document.getElementById('language').value = config.language;
+      document.getElementById('grade').value = config.grade;
+      document.getElementById('term').value = config.term;
+      document.getElementById('sessionTitle').value = config.sessionTitle;
+      document.getElementById('documentClass').value = config.documentClass;
+      document.getElementById('numerals').value = config.numerals;
+      document.getElementById('directions').value = config.directions;
+    }
+    
+    function saveConfig() {
+      const config = {
+        sessionID: document.getElementById('sessionID').value,
+        country: document.getElementById('country').value,
+        subject: document.getElementById('subject').value,
+        language: document.getElementById('language').value,
+        grade: document.getElementById('grade').value,
+        term: document.getElementById('term').value,
+        sessionTitle: document.getElementById('sessionTitle').value,
+        documentClass: document.getElementById('documentClass').value,
+        numerals: document.getElementById('numerals').value,
+        directions: document.getElementById('directions').value
+      };
+      
+      google.script.run.withSuccessHandler(function() {
+        document.getElementById('successMsg').style.display = 'block';
+        setTimeout(function() {
+          google.script.host.close();
+        }, 1500);
+      }).saveSessionConfig(config);
+    }
+  </script>
+</body>
+</html>
